@@ -206,18 +206,18 @@ class GuardSubprocVecEnv(ShareVecEnv):
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
         obs, rews, dones, infos = zip(*results)
-        return np.stack(obs), np.stack(rews), np.stack(dones), infos
+        return np.stack(obs,dtype=object), np.stack(rews,dtype=object), np.stack(dones,dtype=object), infos
 
     def reset(self):
         for remote in self.remotes:
             remote.send(('reset', None))
         obs = [remote.recv() for remote in self.remotes]
-        return np.stack(obs)
+        return np.stack(obs,dtype=object)
 
     def reset_task(self):
         for remote in self.remotes:
             remote.send(('reset_task', None))
-        return np.stack([remote.recv() for remote in self.remotes])
+        return np.stack([remote.recv() for remote in self.remotes],dtype=object)
 
     def close(self):
         if self.closed:
@@ -263,19 +263,19 @@ class SubprocVecEnv(ShareVecEnv):
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
         obs, rews, dones, infos = zip(*results)
-        return np.stack(obs), np.stack(rews), np.stack(dones), infos
+        return np.stack(obs,dtype=object), np.stack(rews,dtype=object), np.stack(dones,dtype=object), infos
 
     def reset(self):
         for remote in self.remotes:
             remote.send(('reset', None))
         obs = [remote.recv() for remote in self.remotes]
-        return np.stack(obs)
+        return np.stack(obs,dtype=object)
 
 
     def reset_task(self):
         for remote in self.remotes:
             remote.send(('reset_task', None))
-        return np.stack([remote.recv() for remote in self.remotes])
+        return np.stack([remote.recv() for remote in self.remotes],dtype=object)
 
     def close(self):
         if self.closed:
@@ -294,7 +294,7 @@ class SubprocVecEnv(ShareVecEnv):
             remote.send(('render', mode))
         if mode == "rgb_array":   
             frame = [remote.recv() for remote in self.remotes]
-            return np.stack(frame) 
+            return np.stack(frame,dtype=object) 
 
 
 def shareworker(remote, parent_remote, env_fn_wrapper):
@@ -369,19 +369,19 @@ class ShareSubprocVecEnv(ShareVecEnv):
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
         obs, share_obs, rews, dones, infos, available_actions = zip(*results)
-        return np.stack(obs), np.stack(share_obs), np.stack(rews), np.stack(dones), infos, np.stack(available_actions)
+        return np.stack(obs,dtype=object), np.stack(share_obs,dtype=object), np.stack(rews,dtype=object), np.stack(dones,dtype=object), infos, np.stack(available_actions,dtype=object)
 
     def reset(self):
         for remote in self.remotes:
             remote.send(('reset', None))
         results = [remote.recv() for remote in self.remotes]
         obs, share_obs, available_actions = zip(*results)
-        return np.stack(obs), np.stack(share_obs), np.stack(available_actions)
+        return np.stack(obs,dtype=object), np.stack(share_obs,dtype=object), np.stack(available_actions,dtype=object)
 
     def reset_task(self):
         for remote in self.remotes:
             remote.send(('reset_task', None))
-        return np.stack([remote.recv() for remote in self.remotes])
+        return np.stack([remote.recv() for remote in self.remotes],dtype=object)
 
     def close(self):
         if self.closed:
@@ -457,25 +457,25 @@ class ChooseSimpleSubprocVecEnv(ShareVecEnv):
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
         obs, rews, dones, infos = zip(*results)
-        return np.stack(obs), np.stack(rews), np.stack(dones), infos
+        return np.stack(obs,dtype=object), np.stack(rews,dtype=object), np.stack(dones,dtype=object), infos
 
     def reset(self, reset_choose):
         for remote, choose in zip(self.remotes, reset_choose):
             remote.send(('reset', choose))
         obs = [remote.recv() for remote in self.remotes]
-        return np.stack(obs)
+        return np.stack(obs,dtype=object)
 
     def render(self, mode="rgb_array"):
         for remote in self.remotes:
             remote.send(('render', mode))
         if mode == "rgb_array":   
             frame = [remote.recv() for remote in self.remotes]
-            return np.stack(frame)
+            return np.stack(frame,dtype=object)
 
     def reset_task(self):
         for remote in self.remotes:
             remote.send(('reset_task', None))
-        return np.stack([remote.recv() for remote in self.remotes])
+        return np.stack([remote.recv() for remote in self.remotes],dtype=object)
 
     def close(self):
         if self.closed:
@@ -548,19 +548,19 @@ class ChooseSubprocVecEnv(ShareVecEnv):
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
         obs, share_obs, rews, dones, infos, available_actions = zip(*results)
-        return np.stack(obs), np.stack(share_obs), np.stack(rews), np.stack(dones), infos, np.stack(available_actions)
+        return np.stack(obs,dtype=object), np.stack(share_obs,dtype=object), np.stack(rews,dtype=object), np.stack(dones,dtype=object), infos, np.stack(available_actions,dtype=object)
 
     def reset(self, reset_choose):
         for remote, choose in zip(self.remotes, reset_choose):
             remote.send(('reset', choose))
         results = [remote.recv() for remote in self.remotes]
         obs, share_obs, available_actions = zip(*results)
-        return np.stack(obs), np.stack(share_obs), np.stack(available_actions)
+        return np.stack(obs,dtype=object), np.stack(share_obs,dtype=object), np.stack(available_actions,dtype=object)
 
     def reset_task(self):
         for remote in self.remotes:
             remote.send(('reset_task', None))
-        return np.stack([remote.recv() for remote in self.remotes])
+        return np.stack([remote.recv() for remote in self.remotes],dtype=object)
 
     def close(self):
         if self.closed:
@@ -631,18 +631,18 @@ class ChooseGuardSubprocVecEnv(ShareVecEnv):
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
         obs, rews, dones, infos = zip(*results)
-        return np.stack(obs), np.stack(rews), np.stack(dones), infos
+        return np.stack(obs,dtype=object), np.stack(rews,dtype=object), np.stack(dones,dtype=object), infos
 
     def reset(self, reset_choose):
         for remote, choose in zip(self.remotes, reset_choose):
             remote.send(('reset', choose))
         obs = [remote.recv() for remote in self.remotes]
-        return np.stack(obs)
+        return np.stack(obs,dtype=object)
 
     def reset_task(self):
         for remote in self.remotes:
             remote.send(('reset_task', None))
-        return np.stack([remote.recv() for remote in self.remotes])
+        return np.stack([remote.recv() for remote in self.remotes],dtype=object)
 
     def close(self):
         if self.closed:
