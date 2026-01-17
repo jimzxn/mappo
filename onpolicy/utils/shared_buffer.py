@@ -237,7 +237,9 @@ class SharedReplayBuffer(object):
                 next_Q = value_t_plus_1[-1]
                 target_value = [next_value]
                 zero_base = np.zeros_like(target_value[-1])
-                for step in reversed(range(self.rewards.shape[0])):
+                max_steps = min(self.rewards.shape[0], value_t_plus_1.shape[0])
+
+                for step in reversed(range(max_steps)):
                     nonterminal = self.masks[step + 1]
                     nextvalues = value_t_plus_1[step] # 最后一个cur_obs得出
 

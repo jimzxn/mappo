@@ -1,4 +1,3 @@
-    
 import time
 import wandb
 import os
@@ -176,7 +175,7 @@ class HanabiRunner(Runner):
             # reward of step 0 will be thrown away.
             self.turn_rewards[choose, current_agent_id] = self.turn_rewards_since_last_action[choose, current_agent_id].copy()
             self.turn_rewards_since_last_action[choose, current_agent_id] = 0.0
-            self.turn_rewards_since_last_action[choose] += rewards[choose]
+            self.turn_rewards_since_last_action[choose] += rewards[choose].astype(np.float32)  # Ensure rewards are float32
 
             # done==True env
 

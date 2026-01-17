@@ -13,5 +13,5 @@ do
     echo "seed is ${seed}:"
     CUDA_VISIBLE_DEVICES=0 python ../train/train_smac.py --env_name ${env} --algorithm_name ${algo} --experiment_name ${exp} \
     --map_name ${map} --seed ${seed} --n_training_threads 1 --n_rollout_threads 8 --num_mini_batch 1 --episode_length 400 --lr 1e-3 --critic_lr 5e-4 \
-    --num_env_steps 10000000 --ppo_epoch 15 --use_value_active_masks --use_eval  --eval_episodes 32 --clip_param 0.05 --wandb_name "mappo" --user_name "jimzhao0422"  
+    --num_env_steps 10000000 --ppo_epoch 15 --use_value_active_masks --use_eval  --eval_episodes 32 --use_gae false --clip_param 0.05 --wandb_name "mappo" --user_name "jimzhao0422"  
 done
