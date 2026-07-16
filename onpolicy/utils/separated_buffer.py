@@ -3,6 +3,7 @@ import numpy as np
 from collections import defaultdict
 
 from onpolicy.utils.util import check, get_shape_from_obs_space, get_shape_from_act_space
+from onpolicy.utils.sae import SAEEstimator, apply_sae_to_buffer
 
 def _flatten(T, N, x):
     return x.reshape(T * N, *x.shape[2:])
@@ -23,6 +24,22 @@ class SeparatedReplayBuffer(object):
         self._use_valuenorm = args.use_valuenorm
         self._use_proper_time_limits = args.use_proper_time_limits
 
+        self._sae_estimator = SAEEstimator(
+            gamma=self.gamma,
+            gae_lambda=self.gae_lambda,
+            omega=getattr(args, "sae_omega", 1.0),
+            alpha=getattr(args, "sae_alpha", 0.1),
+            gate=getattr(args, "sae_gate", "hard"),
+            temperature=getattr(args, "sae_temperature", 1.0),
+            blend_mode=(
+                "pure"
+                if getattr(args, "use_pure_sae", False)
+                else getattr(args, "sae_blend_mode", "legacy_add")
+            ),
+        )
+        self.sae_advantages = None
+        self.sae_diagnostics = None
+
         obs_shape = get_shape_from_obs_space(obs_space)
         share_obs_shape = get_shape_from_obs_space(share_obs_space)
 
@@ -40,6 +57,8 @@ class SeparatedReplayBuffer(object):
 
         self.value_preds = np.zeros((self.episode_length + 1, self.n_rollout_threads, 1), dtype=np.float32)
         self.returns = np.zeros((self.episode_length + 1, self.n_rollout_threads, 1), dtype=np.float32)
+        self.sae_advantages = None
+        self.sae_diagnostics = None
         
         if act_space.__class__.__name__ == 'Discrete':
             self.available_actions = np.ones((self.episode_length + 1, self.n_rollout_threads, act_space.n), dtype=np.float32)
@@ -108,14 +127,24 @@ class SeparatedReplayBuffer(object):
         self.active_masks[0] = self.active_masks[-1].copy()
         if self.available_actions is not None:
             self.available_actions[0] = self.available_actions[-1].copy()
+        self.sae_advantages = None
+        self.sae_diagnostics = None
 
     def chooseafter_update(self):
         self.rnn_states[0] = self.rnn_states[-1].copy()
         self.rnn_states_critic[0] = self.rnn_states_critic[-1].copy()
         self.masks[0] = self.masks[-1].copy()
         self.bad_masks[0] = self.bad_masks[-1].copy()
+        self.sae_advantages = None
+        self.sae_diagnostics = None
 
     def compute_returns(self, next_value, value_normalizer=None):
+        self.sae_advantages = None
+        self.sae_diagnostics = None
+        # Backward-compatible switch: True -> standard GAE, False -> SAE.
+        if not self._use_gae:
+            apply_sae_to_buffer(self, next_value, value_normalizer)
+            return
         if self._use_proper_time_limits:
             if self._use_gae:
                 self.value_preds[-1] = next_value

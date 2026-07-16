@@ -247,7 +247,20 @@ def get_config():
     parser.add_argument("--max_grad_norm", type=float, default=10.0,
                         help='max norm of gradients (default: 0.5)')
     parser.add_argument("--use_gae", action='store_false',
-                        default=True, help='use generalized advantage estimation')
+                        default=True, help='standard GAE when true; SAE when false')
+    parser.add_argument("--use_pure_sae", action='store_true', default=False,
+                        help='with SAE active, use A_SAE directly and ignore the historical actor blend')
+    parser.add_argument("--sae_alpha", type=float, default=0.1,
+                        help='legacy GAE + alpha * SAE actor blend coefficient')
+    parser.add_argument("--sae_omega", type=float, default=1.0,
+                        help='bounded selective trace strength in [0, 1]')
+    parser.add_argument("--sae_gate", type=str, default='hard',
+                        choices=['hard', 'soft'], help='SAE selection gate')
+    parser.add_argument("--sae_temperature", type=float, default=1.0,
+                        help='positive temperature for the soft SAE gate')
+    parser.add_argument("--sae_blend_mode", type=str, default='legacy_add',
+                        choices=['legacy_add', 'residual'],
+                        help='legacy additive blend or residual interpolation')
     parser.add_argument("--gamma", type=float, default=0.99,
                         help='discount factor for rewards (default: 0.99)')
     parser.add_argument("--gae_lambda", type=float, default=0.95,

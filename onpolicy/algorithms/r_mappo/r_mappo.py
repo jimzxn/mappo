@@ -171,7 +171,17 @@ class R_MAPPO():
 
         :return train_info: (dict) contains information regarding training update (e.g. loss, grad norms, etc).
         """
-        if self._use_popart or self._use_valuenorm:
+        use_sae = not getattr(buffer, "_use_gae", True)
+        if use_sae:
+            sae_advantages = getattr(buffer, "sae_advantages", None)
+            if sae_advantages is None:
+                raise RuntimeError(
+                    "SAE is active but buffer.sae_advantages was not computed"
+                )
+            if sae_advantages.shape != buffer.returns[:-1].shape:
+                raise ValueError("SAE advantage shape does not match returns")
+            advantages = sae_advantages.copy()
+        elif self._use_popart or self._use_valuenorm:
             advantages = buffer.returns[:-1] - self.value_normalizer.denormalize(buffer.value_preds[:-1])
         else:
             advantages = buffer.returns[:-1] - buffer.value_preds[:-1]
@@ -180,6 +190,8 @@ class R_MAPPO():
         mean_advantages = np.nanmean(advantages_copy)
         std_advantages = np.nanstd(advantages_copy)
         advantages = (advantages - mean_advantages) / (std_advantages + 1e-5)
+        if use_sae:
+            advantages[buffer.active_masks[:-1] == 0.0] = 0.0
         
 
         train_info = {}
